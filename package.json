@@ -1,0 +1,13 @@
+{
+  "name": "boat-gaudi-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "競艇出走表＋GAUDICODE競艇AI予想サイト（自動取得・毎日更新）",
+  "scripts": {
+    "build-data": "node scripts/fetch-and-build.mjs",
+    "build-data:today": "node scripts/fetch-and-build.mjs"
+  },
+  "dependencies": {
+    "jsdom": "^24.1.0"
+  }
+}
