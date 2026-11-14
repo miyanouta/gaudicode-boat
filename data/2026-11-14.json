@@ -11778,6 +11778,30 @@
               "waterTemp": 15,
               "wave": 0
             }
+          },
+          "result": {
+            "top3": [
+              1,
+              3,
+              2
+            ],
+            "sanrenpuku": {
+              "combo": "1-2-3",
+              "payout": 580
+            },
+            "sanrentan": {
+              "combo": "1-3-2",
+              "payout": 1370
+            },
+            "hits": {
+              "teppan": false,
+              "balance": false,
+              "shoubu": true,
+              "tanTeppan": false,
+              "tanBalance": false,
+              "tanShoubu": false,
+              "sanrentan": false
+            }
           }
         },
         {
@@ -12011,6 +12035,30 @@
               "reason": "モーター2連率47.73%は全艇トップの好モーター"
             },
             "comment": "◎6号艇 馬野 耀（スコア5.74）。全国勝率6.33・モーター2連率38.89%。\n対抗は○4号艇 渡邉 俊介、▲は1号艇 三浦 洋次朗。\n穴候補は5号艇 土屋 蘭（モーター2連率47.73%は全艇トップの好モーター）。"
+          },
+          "result": {
+            "top3": [
+              1,
+              6,
+              2
+            ],
+            "sanrenpuku": {
+              "combo": "1-2-6",
+              "payout": 1310
+            },
+            "sanrentan": {
+              "combo": "1-6-2",
+              "payout": 3360
+            },
+            "hits": {
+              "teppan": false,
+              "balance": true,
+              "shoubu": true,
+              "tanTeppan": false,
+              "tanBalance": false,
+              "tanShoubu": false,
+              "sanrentan": false
+            }
           }
         },
         {
@@ -12244,6 +12292,30 @@
               "reason": "モーター2連率30.77%で下位スコアからの一発候補"
             },
             "comment": "◎1号艇 中村 有裕（スコア8.05）。全国勝率6.48・モーター2連率36.36%・1号艇の枠番有利も大きい。\n対抗は○5号艇 竹腰 正樹、▲は2号艇 宇佐見 淳。\n穴候補は3号艇 別府 昌樹（モーター2連率30.77%で下位スコアからの一発候補）。"
+          },
+          "result": {
+            "top3": [
+              1,
+              4,
+              2
+            ],
+            "sanrenpuku": {
+              "combo": "1-2-4",
+              "payout": 500
+            },
+            "sanrentan": {
+              "combo": "1-4-2",
+              "payout": 2630
+            },
+            "hits": {
+              "teppan": false,
+              "balance": false,
+              "shoubu": false,
+              "tanTeppan": false,
+              "tanBalance": false,
+              "tanShoubu": false,
+              "sanrentan": false
+            }
           }
         },
         {
@@ -12477,6 +12549,30 @@
               "reason": "A2級の実力派・モーター2連率24.44%"
             },
             "comment": "◎5号艇 作間 章（スコア7.07）。全国勝率6.14・モーター2連率47.27%。\n対抗は○4号艇 原田 秀弥、▲は1号艇 川島 圭司。\n穴候補は3号艇 井手 良太（A2級の実力派・モーター2連率24.44%）。"
+          },
+          "result": {
+            "top3": [
+              1,
+              2,
+              3
+            ],
+            "sanrenpuku": {
+              "combo": "1-2-3",
+              "payout": 300
+            },
+            "sanrentan": {
+              "combo": "1-2-3",
+              "payout": 610
+            },
+            "hits": {
+              "teppan": false,
+              "balance": false,
+              "shoubu": true,
+              "tanTeppan": false,
+              "tanBalance": false,
+              "tanShoubu": false,
+              "sanrentan": false
+            }
           }
         },
         {
@@ -12710,6 +12806,30 @@
               "reason": "モーター2連率49.09%で下位スコアからの一発候補"
             },
             "comment": "◎1号艇 前田 篤哉（スコア7.51）。全国勝率6.38・モーター2連率63.16%・1号艇の枠番有利も大きい。\n対抗は○3号艇 原田 篤志、▲は2号艇 田路 朋史。\n穴候補は6号艇 西村 歩（モーター2連率49.09%で下位スコアからの一発候補）。"
+          },
+          "result": {
+            "top3": [
+              1,
+              2,
+              4
+            ],
+            "sanrenpuku": {
+              "combo": "1-2-4",
+              "payout": 560
+            },
+            "sanrentan": {
+              "combo": "1-2-4",
+              "payout": 1400
+            },
+            "hits": {
+              "teppan": false,
+              "balance": true,
+              "shoubu": true,
+              "tanTeppan": false,
+              "tanBalance": false,
+              "tanShoubu": true,
+              "sanrentan": false
+            }
           }
         }
       ]
@@ -34316,6 +34436,30 @@
               "waterTemp": 19,
               "wave": 4
             }
+          },
+          "result": {
+            "top3": [
+              1,
+              3,
+              4
+            ],
+            "sanrenpuku": {
+              "combo": "1-3-4",
+              "payout": 470
+            },
+            "sanrentan": {
+              "combo": "1-3-4",
+              "payout": 1010
+            },
+            "hits": {
+              "teppan": false,
+              "balance": true,
+              "shoubu": true,
+              "tanTeppan": false,
+              "tanBalance": false,
+              "tanShoubu": true,
+              "sanrentan": false
+            }
           }
         },
         {
@@ -34677,6 +34821,30 @@
               "waterTemp": 19,
               "wave": 4
             }
+          },
+          "result": {
+            "top3": [
+              1,
+              3,
+              6
+            ],
+            "sanrenpuku": {
+              "combo": "1-3-6",
+              "payout": 680
+            },
+            "sanrentan": {
+              "combo": "1-3-6",
+              "payout": 3340
+            },
+            "hits": {
+              "teppan": true,
+              "balance": true,
+              "shoubu": true,
+              "tanTeppan": false,
+              "tanBalance": true,
+              "tanShoubu": true,
+              "sanrentan": false
+            }
           }
         },
         {
@@ -34910,6 +35078,30 @@
               "reason": "モーター2連率36.4%で下位スコアからの一発候補"
             },
             "comment": "◎1号艇 古賀 繁輝（スコア9.29）。全国勝率6.75・モーター2連率42.79%・1号艇の枠番有利も大きい。\n対抗は○3号艇 北山 康介、▲は5号艇 山本 寛久。\n穴候補は2号艇 西川 真人（モーター2連率36.4%で下位スコアからの一発候補）。"
+          },
+          "result": {
+            "top3": [
+              1,
+              3,
+              4
+            ],
+            "sanrenpuku": {
+              "combo": "1-3-4",
+              "payout": 930
+            },
+            "sanrentan": {
+              "combo": "1-3-4",
+              "payout": 1350
+            },
+            "hits": {
+              "teppan": false,
+              "balance": false,
+              "shoubu": false,
+              "tanTeppan": false,
+              "tanBalance": false,
+              "tanShoubu": false,
+              "sanrentan": false
+            }
           }
         },
         {
@@ -35143,6 +35335,30 @@
               "reason": "モーター2連率39.17%は全艇トップの好モーター"
             },
             "comment": "◎3号艇 桐本 康臣（スコア3.71）。全国勝率5.72・モーター2連率38.76%。\n対抗は○6号艇 君島 秀三、▲は1号艇 川上 剛。\n穴候補は4号艇 古田 祐貴（モーター2連率39.17%は全艇トップの好モーター）。"
+          },
+          "result": {
+            "top3": [
+              1,
+              4,
+              3
+            ],
+            "sanrenpuku": {
+              "combo": "1-3-4",
+              "payout": 480
+            },
+            "sanrentan": {
+              "combo": "1-4-3",
+              "payout": 1520
+            },
+            "hits": {
+              "teppan": true,
+              "balance": true,
+              "shoubu": true,
+              "tanTeppan": false,
+              "tanBalance": false,
+              "tanShoubu": false,
+              "sanrentan": false
+            }
           }
         },
         {
@@ -35376,6 +35592,30 @@
               "reason": "モーター2連率32.73%で下位スコアからの一発候補"
             },
             "comment": "◎3号艇 平高 奈菜（スコア6.52）。全国勝率6.91・モーター2連率33.49%。\n対抗は○4号艇 向井 美鈴、▲は2号艇 西村 美智子。\n穴候補は6号艇 佐藤 ほのか（モーター2連率32.73%で下位スコアからの一発候補）。"
+          },
+          "result": {
+            "top3": [
+              4,
+              3,
+              2
+            ],
+            "sanrenpuku": {
+              "combo": "2-3-4",
+              "payout": 2640
+            },
+            "sanrentan": {
+              "combo": "4-3-2",
+              "payout": 18950
+            },
+            "hits": {
+              "teppan": false,
+              "balance": true,
+              "shoubu": true,
+              "tanTeppan": false,
+              "tanBalance": false,
+              "tanShoubu": false,
+              "sanrentan": false
+            }
           }
         }
       ]
@@ -44024,6 +44264,30 @@
               "waterTemp": 20,
               "wave": 1
             }
+          },
+          "result": {
+            "top3": [
+              1,
+              4,
+              3
+            ],
+            "sanrenpuku": {
+              "combo": "1-3-4",
+              "payout": 400
+            },
+            "sanrentan": {
+              "combo": "1-4-3",
+              "payout": 1210
+            },
+            "hits": {
+              "teppan": false,
+              "balance": false,
+              "shoubu": false,
+              "tanTeppan": false,
+              "tanBalance": false,
+              "tanShoubu": false,
+              "sanrentan": false
+            }
           }
         },
         {
@@ -44257,6 +44521,30 @@
               "reason": "モーター2連率40%は全艇トップの好モーター"
             },
             "comment": "◎3号艇 白神 優（スコア5.74）。全国勝率6.30・モーター2連率39.13%。\n対抗は○4号艇 長岡 良也、▲は1号艇 松田 祐季。\n穴候補は6号艇 鈴木 裕隆（モーター2連率40%は全艇トップの好モーター）。"
+          },
+          "result": {
+            "top3": [
+              1,
+              2,
+              5
+            ],
+            "sanrenpuku": {
+              "combo": "1-2-5",
+              "payout": 2230
+            },
+            "sanrentan": {
+              "combo": "1-2-5",
+              "payout": 4050
+            },
+            "hits": {
+              "teppan": false,
+              "balance": false,
+              "shoubu": false,
+              "tanTeppan": false,
+              "tanBalance": false,
+              "tanShoubu": false,
+              "sanrentan": false
+            }
           }
         },
         {
@@ -44490,6 +44778,30 @@
               "reason": "A2級の実力派・モーター2連率32%"
             },
             "comment": "◎5号艇 石橋 道友（スコア6.69）。全国勝率6.71・モーター2連率31.25%。\n対抗は○2号艇 岩崎 正哉、▲は1号艇 竹田 辰也。\n穴候補は3号艇 森 悠稀（A2級の実力派・モーター2連率32%）。"
+          },
+          "result": {
+            "top3": [
+              1,
+              2,
+              3
+            ],
+            "sanrenpuku": {
+              "combo": "1-2-3",
+              "payout": 560
+            },
+            "sanrentan": {
+              "combo": "1-2-3",
+              "payout": 1120
+            },
+            "hits": {
+              "teppan": true,
+              "balance": true,
+              "shoubu": true,
+              "tanTeppan": false,
+              "tanBalance": false,
+              "tanShoubu": false,
+              "sanrentan": false
+            }
           }
         },
         {
@@ -44723,6 +45035,30 @@
               "reason": "A2級の実力派・モーター2連率35.48%"
             },
             "comment": "◎1号艇 佐藤 博亮（スコア7.29）。全国勝率6.94・モーター2連率32.29%・1号艇の枠番有利も大きい。\n対抗は○2号艇 中嶋 健一郎、▲は5号艇 鈴木 孝明。\n穴候補は6号艇 長野 壮志郎（A2級の実力派・モーター2連率35.48%）。"
+          },
+          "result": {
+            "top3": [
+              1,
+              2,
+              3
+            ],
+            "sanrenpuku": {
+              "combo": "1-2-3",
+              "payout": 400
+            },
+            "sanrentan": {
+              "combo": "1-2-3",
+              "payout": 710
+            },
+            "hits": {
+              "teppan": false,
+              "balance": false,
+              "shoubu": false,
+              "tanTeppan": false,
+              "tanBalance": false,
+              "tanShoubu": false,
+              "sanrentan": false
+            }
           }
         },
         {
@@ -44956,6 +45292,30 @@
               "reason": "モーター2連率37.37%で下位スコアからの一発候補"
             },
             "comment": "◎1号艇 三浦 敬太（スコア9.56）。全国勝率6.33・モーター2連率50.54%・1号艇の枠番有利も大きい。\n対抗は○5号艇 芦澤 望、▲は6号艇 佐々木 翔斗。\n穴候補は3号艇 峰重 侑治（モーター2連率37.37%で下位スコアからの一発候補）。"
+          },
+          "result": {
+            "top3": [
+              4,
+              1,
+              5
+            ],
+            "sanrenpuku": {
+              "combo": "1-4-5",
+              "payout": 2590
+            },
+            "sanrentan": {
+              "combo": "4-1-5",
+              "payout": 46140
+            },
+            "hits": {
+              "teppan": false,
+              "balance": true,
+              "shoubu": true,
+              "tanTeppan": false,
+              "tanBalance": false,
+              "tanShoubu": false,
+              "sanrentan": false
+            }
           }
         }
       ]
@@ -44966,5 +45326,5 @@
     "warnings": 0,
     "checkedAt": "2026-11-13T23:01:44.563Z"
   },
-  "resultsUpdatedAt": "2026-11-14T09:36:22.282Z"
+  "resultsUpdatedAt": "2026-11-14T23:23:03.818Z"
 }
