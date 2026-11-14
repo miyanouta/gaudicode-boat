@@ -113,11 +113,21 @@ addT(pureTan, T(hon.num, san.num, tai.num));
 const tanBalance = [...tanTeppan];
 for (const c of pureTan) addT(tanBalance, c);
 addT(tanBalance, T(ana.num, tai.num, hon.num)); // 穴頭
-// 勝負 = バランス + 本命頭フォーメーション (競輪のA案 2026-11-14 採用と同構成)
+// 勝負 = バランス + 案D改の追加5点 (2026-11-14 採用)
+// 旧構成 (本命頭フォーメーション) は追加分が三連複の組の内側だけにあり、
+// 三連単だけの単独的中が構造的に0件だったため差し替えた。
+// 追加: {◎○▲} の順序拡大3点 + ○→▲→穴 + ◎→○→E
+// (E = ◎○▲・穴・D のいずれでもない残り1艇)。
+// 検証 (2026-11-13+14 の終了309レース): 的中 23.3%→26.9% / 回収 45.7%→57.4% /
+// 単独的中 0→6件 / 万舟 3→4件 / 点数は 12点のまま不変。
 const tanShoubu = [...tanBalance];
-const fSeconds = [tai.num, san.num, ana.num];
-const fThirds = [hon.num, tai.num, san.num, ana.num, bestD? bestD.num: null].filter((n) => n!= null);
-for (const b of fSeconds) for (const c of fThirds) addT(tanShoubu, T(hon.num, b, c));
+const usedTanNums = new Set([hon.num, tai.num, san.num, ana.num, bestD? bestD.num: null]);
+const restE = ranked.find((r) =>!usedTanNums.has(r.num)) || null;
+addT(tanShoubu, T(tai.num, hon.num, san.num)); // ○→◎→▲
+addT(tanShoubu, T(san.num, hon.num, tai.num)); // ▲→◎→○
+addT(tanShoubu, T(tai.num, san.num, hon.num)); // ○→▲→◎
+addT(tanShoubu, T(tai.num, san.num, ana.num)); // ○→▲→穴
+addT(tanShoubu, T(hon.num, tai.num, restE? restE.num: null)); // ◎→○→E
 
 const comment = [
 `◎${hon.num}号艇 ${hon.name}（スコア${scoreOf(hon).toFixed(2)}）。全国勝率${hon.winRateAll.toFixed(2)}・モーター2連率${hon.motorRate}%${hon.num === 1? '・1号艇の枠番有利も大きい': ''}。`,
