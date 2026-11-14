@@ -4,6 +4,15 @@ name: 日中の結果を自動更新
 # 加えて深夜0:30 (JST) に最終取り込みを1回行う (ミッドナイト開催対策)
 # (UTC 23:00〜14:30)。結果取得はGAUDICODE本体を使わないため、
 # 表示専用の公開リポジトリ単体でも動作する。
+#
+# 2026-11-14 の事故対策:
+#   - 取得が約28分かかり、その間に別pushが入って push が競合 (rejected)
+#     し、49レース分の結果が失われた。
+#   - 対策: 取得スクリプト側の高速化 (記録済み・未発走を除外、4並列、
+#     タイムアウト) に加え、ここでも
+#       * concurrency で同時実行を禁止
+#       * 結果は直前情報より先に単独でコミット＆push する
+#       * push が競合したら最新を取り込んで再取得してから再試行する
 on:
   schedule:
     - cron: "*/30 23,0-14 * * *"
@@ -13,9 +22,14 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: boat-results
+  cancel-in-progress: false
+
 jobs:
   results:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -23,6 +37,7 @@ jobs:
           node-version: "20"
       - run: npm install --no-audit --no-fund
       - name: 今日の結果を取得
+        timeout-minutes: 12
         run: |
           TODAY=$(TZ=Asia/Tokyo date +%F)
           if [ -f "data/${TODAY}.json" ]; then
@@ -30,7 +45,32 @@ jobs:
           else
             echo "今日のデータがまだ無いのでスキップ"
           fi
+      - name: 結果をコミット
+        run: |
+          TODAY=$(TZ=Asia/Tokyo date +%F)
+          git config user.name "gaudi-bot"
+          git config user.email "bot@example.com"
+          pushed=0
+          for attempt in 1 2 3; do
+            git add data/
+            if git diff --cached --quiet; then pushed=1; break; fi
+            git commit -m "data: 結果を自動更新"
+            if git push; then pushed=1; break; fi
+            echo "push が競合しました。最新を取り込んで再取得してから再試行します (attempt ${attempt})"
+            git fetch origin
+            git reset --hard origin/main
+            if [ -f "data/${TODAY}.json" ]; then
+              node scripts/fetch-results.mjs "${TODAY}" || true
+            fi
+          done
+          if [ "${pushed}" != "1" ]; then
+            echo "結果の push に失敗しました"
+            exit 1
+          fi
       - name: 今日の直前情報（展示）を取得
+        if: always()
+        timeout-minutes: 12
+        continue-on-error: true
         run: |
           TODAY=$(TZ=Asia/Tokyo date +%F)
           if [ -f "data/${TODAY}.json" ]; then
@@ -38,10 +78,26 @@ jobs:
           else
             echo "今日のデータがまだ無いのでスキップ"
           fi
-      - name: データをコミット
+      - name: 直前情報をコミット
+        if: always()
         run: |
+          TODAY=$(TZ=Asia/Tokyo date +%F)
           git config user.name "gaudi-bot"
           git config user.email "bot@example.com"
-          git add data/
-          git diff --cached --quiet || git commit -m "data: 結果を自動更新"
-          git push
+          pushed=0
+          for attempt in 1 2 3; do
+            git add data/
+            if git diff --cached --quiet; then pushed=1; break; fi
+            git commit -m "data: 直前情報を自動更新"
+            if git push; then pushed=1; break; fi
+            echo "push が競合しました。最新を取り込んで再取得してから再試行します (attempt ${attempt})"
+            git fetch origin
+            git reset --hard origin/main
+            if [ -f "data/${TODAY}.json" ]; then
+              node scripts/fetch-preinfo.mjs "${TODAY}" || true
+            fi
+          done
+          if [ "${pushed}" != "1" ]; then
+            echo "直前情報の push に失敗しました"
+            exit 1
+          fi

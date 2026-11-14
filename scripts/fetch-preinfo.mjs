@@ -29,13 +29,32 @@ import { rebuildWithTenji } from './predict-lib.mjs';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36';
 const DELAY_MS = 600;
+const TIMEOUT_MS = 20000;
 const BASE = 'https://www.boatrace.jp/owpc/pc/race';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function fetchHtml(url) {
-  const res = await fetch(url, { headers: { 'User-Agent': UA, 'Accept-Language': 'ja' } });
-  if (!res.ok) throw new Error(`HTTP ${res.status} ${url}`);
-  return await res.text();
+  let lastErr = null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(url, {
+        headers: { 'User-Agent': UA, 'Accept-Language': 'ja' },
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      });
+      if (!res.ok) {
+        const err = new Error(`HTTP ${res.status} ${url}`);
+        err.httpStatus = res.status;
+        throw err;
+      }
+      return await res.text();
+    } catch (e) {
+      lastErr = e;
+      // HTTP 4xx はリトライしても直らないので即失敗。それ以外は1回だけ再試行。
+      if (e.httpStatus && e.httpStatus < 500) break;
+      if (attempt === 0) await sleep(1500);
+    }
+  }
+  throw lastErr;
 }
 
 function jstNow() {

@@ -9,6 +9,14 @@
 // 使い方:
 //   node scripts/fetch-results.mjs [YYYY-MM-DD] [--venue=02]
 // 前提: その日の data/<date>.json が存在すること (先に出走表を取得)。
+//
+// 高速化 (2026-11-14): 全レース再取得で約28分かかり、コミットの push が
+// 競合して結果が失われた事故を受けた対策。
+//   - 結果が記録済みのレースは再取得しない
+//   - 今日のファイルでは、発走時刻がまだ来ていないレースは取得しない
+//     (結果ページが存在しないため)
+//   - 場をまたいで最大4並列で取得し、1リクエストには20秒のタイム
+//     アウトと1回のリトライを付ける (遅い応答に全体が引きずられない)
 // ============================================================
 import fs from 'node:fs';
 import path from 'node:path';
@@ -18,19 +26,46 @@ import { JSDOM } from 'jsdom';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36';
 const DELAY_MS = 500;
+const TIMEOUT_MS = 20000;
+const CONCURRENCY = 4;
 const BASE = 'https://www.boatrace.jp/owpc/pc/race';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function fetchHtml(url) {
-  const res = await fetch(url, { headers: { 'User-Agent': UA, 'Accept-Language': 'ja' } });
-  if (!res.ok) throw new Error(`HTTP ${res.status} ${url}`);
-  return await res.text();
+  let lastErr = null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(url, {
+        headers: { 'User-Agent': UA, 'Accept-Language': 'ja' },
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      });
+      if (!res.ok) {
+        const err = new Error(`HTTP ${res.status} ${url}`);
+        err.httpStatus = res.status;
+        throw err;
+      }
+      return await res.text();
+    } catch (e) {
+      lastErr = e;
+      // HTTP 4xx はリトライしても直らないので即失敗。それ以外は1回だけ再試行。
+      if (e.httpStatus && e.httpStatus < 500) break;
+      if (attempt === 0) await sleep(1500);
+    }
+  }
+  throw lastErr;
+}
+
+function jstNow() {
+  const d = new Date(Date.now() + 9 * 3600 * 1000);
+  const p = (n) => String(n).padStart(2, '0');
+  return {
+    date: `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())}`,
+    minutes: d.getUTCHours() * 60 + d.getUTCMinutes(),
+  };
 }
 
 function jstToday() {
-  const d = new Date(Date.now() + 9 * 3600 * 1000);
-  const p = (n) => String(n).padStart(2, '0');
-  return `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())}`;
+  return jstNow().date;
 }
 
 const zen2han = (s) => String(s).replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0));
@@ -107,11 +142,27 @@ async function main() {
   const data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
   const hd = dateStr.replace(/-/g, '');
 
-  let updated = 0, pending = 0, failed = 0;
+  // 取得対象の振り分け: 記録済み・未発走は最初から除外する
+  const now = jstNow();
+  const toMin = (t) => { const [h, m] = String(t).split(':').map(Number); return h * 60 + m; };
+  let updated = 0, pending = 0, failed = 0, already = 0;
+  const tasks = [];
   for (const v of data.venues) {
     if (venueFilter && v.id !== venueFilter.padStart(2, '0')) continue;
     for (const r of v.races) {
       if (r.status !== 'ready') { pending++; continue; }
+      if (r.result) { already++; continue; }
+      // 今日のファイルで発走時刻が未来のレースには結果ページが無い
+      if (dateStr === now.date && r.startTime && toMin(r.startTime) > now.minutes) { pending++; continue; }
+      tasks.push({ v, r });
+    }
+  }
+
+  // 場をまたいで最大 CONCURRENCY 並列 (公式への負荷を抑えるため控えめに)
+  let idx = 0;
+  async function worker() {
+    while (idx < tasks.length) {
+      const { v, r } = tasks[idx++];
       try {
         const html = await fetchHtml(`${BASE}/raceresult?rno=${r.no}&jcd=${v.id}&hd=${hd}`);
         const result = parseResult(html);
@@ -127,9 +178,11 @@ async function main() {
       await sleep(DELAY_MS);
     }
   }
+  await Promise.all(Array.from({ length: Math.min(CONCURRENCY, tasks.length) }, () => worker()));
+
   data.resultsUpdatedAt = new Date().toISOString();
   fs.writeFileSync(dataPath, JSON.stringify(data, null, 2), 'utf8');
-  console.log(`[done] 結果を記録: ${updated}レース / 未確定: ${pending} / 失敗: ${failed}`);
+  console.log(`[done] 結果を記録: ${updated}レース / 既記録: ${already} / 未確定: ${pending} / 失敗: ${failed}`);
 }
 
 main().catch((e) => { console.error('[fatal]', e); process.exit(1); });
