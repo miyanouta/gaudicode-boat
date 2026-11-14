@@ -4,7 +4,15 @@
 // BOAT RACE公式の直前情報ページ (beforeinfo) から、発走が近いレースの
 // 展示タイム・スタート展示・部品交換・チルト・水面気象を取得し、
 // data/<date>.json の各レースに preinfo としてマージする。
-// 展示データの蓄積専用であり、予想エンジンには一切影響しない。
+//
+// 展示が保存できたレースのうち「結果が無く・発走前」のものは、
+// 展示反映スコア (事前スコア + (−z(展示タイム)) × 2.0、2026-11-14
+// ユーザー決定・回収重視) で予想を再構築する (展示反映)。
+// 事前の予想は prediction.pre に退避し、再構築した予想には
+// basis:'tenji' / tenjiApplied:true を付ける。発走済み・結果確定済みの
+// レースは絶対に再構築しない (的中判定は発走直前の最終予想で行うため)。
+// 前回サイクルで preinfo だけ保存され再構築が済んでいないレースも、
+// 起動時にまとめて再構築する (追いつき処理)。
 //
 // 使い方:
 //   node scripts/fetch-preinfo.mjs [YYYY-MM-DD] [--venue=02]
@@ -16,6 +24,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { JSDOM } from 'jsdom';
+import { rebuildWithTenji } from './predict-lib.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36';
@@ -98,7 +107,32 @@ async function main() {
   const day = JSON.parse(fs.readFileSync(file, 'utf8'));
   const hd = date.replace(/-/g, '');
   const toMin = (t) => { const [h, m] = String(t).split(':').map(Number); return h * 60 + m; };
-  let fetched = 0, stored = 0, skipped = 0, failed = 0;
+  let fetched = 0, stored = 0, skipped = 0, failed = 0, rebuilt = 0;
+
+  // 展示反映の再構築: 結果が無く、発走前で、まだ展示未反映のレースだけ。
+  // 発走済み・結果ありのレースには絶対に触らない (的中判定の記録を守る)。
+  const tryRebuild = (v, r) => {
+    if (!r.preinfo || !r.prediction || r.prediction.tenjiApplied) return false;
+    if (r.status !== 'ready' || r.result || !r.startTime) return false;
+    const future = date > now.date || (date === now.date && toMin(r.startTime) > now.minutes);
+    if (!future) return false;
+    const np = rebuildWithTenji(r.racers, r.preinfo.tenji);
+    if (!np) return false;
+    np.pre = { honmei: r.prediction.honmei, plans: r.prediction.plans, plansTan: r.prediction.plansTan };
+    np.basis = 'tenji';
+    np.tenjiApplied = true;
+    r.prediction = np;
+    rebuilt++;
+    console.log(`${v.name} ${r.no}R (${r.startTime}): 展示反映で予想を更新 (本命 ${np.pre.honmei.num}→${np.honmei.num})`);
+    return true;
+  };
+
+  // 追いつき処理: preinfo 保存済みだが再構築が済んでいないレース
+  for (const v of day.venues) {
+    if (venueArg && v.id !== venueArg) continue;
+    for (const r of v.races) tryRebuild(v, r);
+  }
+
   for (const v of day.venues) {
     if (venueArg && v.id !== venueArg) continue;
     for (const r of v.races) {
@@ -118,6 +152,7 @@ async function main() {
           if (info.weather) r.preinfo.weather = info.weather;
           stored++;
           console.log(`${v.name} ${r.no}R (${r.startTime}): 展示 ${Object.keys(info.tenji).length}艇 保存`);
+          tryRebuild(v, r);
         } else {
           skipped++;
           console.log(`${v.name} ${r.no}R (${r.startTime}): 展示未公開のため見送り`);
@@ -129,12 +164,12 @@ async function main() {
       await sleep(DELAY_MS);
     }
   }
-  if (stored > 0) {
+  if (stored > 0 || rebuilt > 0) {
     const tmp = file + '.tmp';
     fs.writeFileSync(tmp, JSON.stringify(day, null, 1));
     fs.renameSync(tmp, file);
   }
-  console.log(`完了: 対象${fetched}件 / 保存${stored}件 / 未公開${skipped}件 / 失敗${failed}件`);
+  console.log(`完了: 対象${fetched}件 / 保存${stored}件 / 未公開${skipped}件 / 失敗${failed}件 / 展示再構築${rebuilt}件`);
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });

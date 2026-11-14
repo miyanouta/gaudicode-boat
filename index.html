@@ -104,6 +104,7 @@
   .cat-morning{background:#ffe9a8;color:#6b5316}
   .cat-nighter{background:#cdd8ff;color:#26337a}
   .cat-midnight{background:#3b2d5e;color:#d9c8ff}
+  .cat-tenji{background:#b8f1dd;color:#0c5c40}
   .live-chip{display:inline-block;border-radius:999px;padding:1px 9px;font-size:11.5px;font-weight:800;margin-left:6px;background:#c2261b;color:#fff;vertical-align:2px;animation:livepulse 1.6s infinite}
   @keyframes livepulse{0%,100%{opacity:1}50%{opacity:.5}}
   .race .rt{display:block;font-size:10.5px;font-weight:700;color:var(--sub);line-height:1.15}
@@ -394,6 +395,7 @@ function renderContent(){
   }
   let html = '<h3 class="race-title">'+v.name+' '+r.no+'R' +
     (v.category? '<span class="cat-chip cat-'+catClass(v.category)+'">'+v.category+'</span>' : '') +
+    (r.prediction && r.prediction.tenjiApplied? '<span class="cat-chip cat-tenji">展示反映</span>' : '') +
     (r.startTime? '<small>締切 '+r.startTime+'</small>' : '') +
     '<small>'+esc(r.name||'')+'</small></h3>';
 
@@ -424,8 +426,10 @@ function renderContent(){
   }
 
   // 出走表
+  const tenjiMap = (r.preinfo && r.preinfo.tenji) ? r.preinfo.tenji : null;
+  const tenjiOn = !!(r.prediction && r.prediction.tenjiApplied);
   html += '<div class="card"><h4>出走表</h4><table><thead><tr>' +
-    '<th>印</th><th>艇</th><th>選手名</th><th>級別</th><th>支部</th><th>年齢/体重</th><th>全国勝率</th><th>当地勝率</th><th>モーター</th><th>ボート</th><th>スコア</th>' +
+    '<th>印</th><th>艇</th><th>選手名</th><th>級別</th><th>支部</th><th>年齢/体重</th><th>全国勝率</th><th>当地勝率</th><th>モーター</th><th>ボート</th>' + (tenjiMap? '<th>展示</th>' : '') + '<th>スコア</th>' +
     '</tr></thead><tbody>';
   r.racers.forEach(x=>{
     const hon = x.mark==='◎' ? ' hon':'';
@@ -435,9 +439,10 @@ function renderContent(){
       '<td>'+Number(x.winRateAll).toFixed(2)+'</td><td>'+Number(x.winRateLocal).toFixed(2)+'</td>' +
       '<td>'+(x.motorNo!=null? x.motorNo+'番 ' : '')+Number(x.motorRate).toFixed(2)+'%</td>' +
       '<td>'+(x.boatNo!=null? x.boatNo+'番 ' : '')+Number(x.boatRate).toFixed(2)+'%</td>' +
-      '<td>'+Number(x.score).toFixed(2)+'</td></tr>';
+      (tenjiMap? '<td>'+(tenjiMap[x.num]!=null? Number(tenjiMap[x.num]).toFixed(2) : '—')+'</td>' : '') +
+      '<td>'+Number(tenjiOn && x.scoreT!=null ? x.scoreT : x.score).toFixed(2)+'</td></tr>';
   });
-  html += '</tbody></table><div style="margin-top:6px;font-size:12.5px;color:var(--sub)">モーター/ボートは「番号・2連率」。スコアは全国勝率・当地勝率・モーター/ボート2連率・級別・枠番有利度を合成したGAUDICODE競艇AIの評価値です（高いほど有力）。</div></div>';
+  html += '</tbody></table><div style="margin-top:6px;font-size:12.5px;color:var(--sub)">モーター/ボートは「番号・2連率」。スコアは全国勝率・当地勝率・モーター/ボート2連率・級別・枠番有利度を合成したGAUDICODE競艇AIの評価値です（高いほど有力）。' + (tenjiOn ? 'このレースは展示反映後の合成スコアを表示しています。' : '') + '</div></div>';
 
   // 予想
   const p = r.prediction;
@@ -466,7 +471,7 @@ function renderContent(){
         (p.plansTan && p.plansTan[k] ? '<div class="k" style="font-size:12px;color:var(--sub);margin:8px 0 4px">三連単</div><div class="combos" style="font-size:15px">'+p.plansTan[k].map(cc=>wrapHit(esc(cc), hitTan(cc))).join(' ／ ')+'</div>' : '') +
         (k==='shoubu' && p.ana ? '<div class="ana">穴候補: '+p.ana.num+'号艇 '+esc(p.ana.name)+'（'+esc(p.ana.reason)+'）</div>' : '') +
         '</div>').join('');
-      html += '<div style="font-size:12px;color:var(--sub);margin-top:6px">鉄板は穴候補を中心にした買い目（全点に穴候補入り）。バランスは鉄板にスコア純正を足したもの、勝負はバランスに中核5艇のボックスを併合したものです。三連単・勝負は本命を1着に固定したフォーメーションです。</div>';
+      html += '<div style="font-size:12px;color:var(--sub);margin-top:6px">鉄板は穴候補を中心にした買い目（全点に穴候補入り）。バランスは鉄板にスコア純正を足したもの、勝負はバランスに中核5艇のボックスを併合したものです。三連単・勝負は本命を1着に固定したフォーメーションです。展示タイムが出たレースは、発走前に展示を反映した予想へ更新されます（展示zスコア×2.0を合成。「展示反映」チップ付き）。</div>';
     }
 
     if(p.comment) html += '<details class="comment-fold"><summary>コメントを読む</summary><div class="comment" style="margin-top:8px">'+esc(p.comment)+'</div></details>';
