@@ -25,6 +25,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { JSDOM } from 'jsdom';
 import { rebuildWithTenji } from './predict-lib.mjs';
+import { applyBoatGensen } from './odds-lib.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36';
@@ -141,6 +142,8 @@ async function main() {
     np.basis = 'tenji';
     np.tenjiApplied = true;
     r.prediction = np;
+    // 展示反映で買い目が組み直されたので、オッズがあれば厳選も組み直す
+    if (r.odds) applyBoatGensen(r);
     rebuilt++;
     console.log(`${v.name} ${r.no}R (${r.startTime}): 展示反映で予想を更新 (本命 ${np.pre.honmei.num}→${np.honmei.num})`);
     return true;

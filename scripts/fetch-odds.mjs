@@ -19,7 +19,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { fetchRaceOdds } from './odds-lib.mjs';
+import { fetchRaceOdds, applyBoatGensen } from './odds-lib.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36';
@@ -92,7 +92,7 @@ async function main() {
     }
   }
 
-  let updated = 0, empty = 0, failed = 0;
+  let updated = 0, empty = 0, failed = 0, gensenApplied = 0;
   let idx = 0;
   async function worker() {
     while (idx < tasks.length) {
@@ -105,6 +105,11 @@ async function main() {
           r.oddsTan = oddsTan;
           r.oddsAt = new Date().toISOString();
           updated++;
+          // 厳選セット: 発走前のレースだけ三連単・勝負を組み直す。
+          // 発走後は凍結するので、開始を過ぎたレースには適用しない。
+          if (!finalMode && dateStr === now.date && r.startTime && toMin(r.startTime) > now.minutes) {
+            if (applyBoatGensen(r)) gensenApplied++;
+          }
         } else { empty++; }
       } catch (e) {
         failed++;
@@ -115,11 +120,11 @@ async function main() {
   }
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, tasks.length) }, () => worker()));
 
-  if (updated > 0) {
+  if (updated > 0 || gensenApplied > 0) {
     data.oddsUpdatedAt = new Date().toISOString();
     fs.writeFileSync(dataPath, JSON.stringify(data, null, 2), 'utf8');
   }
-  console.log(`[done] オッズを記録: ${updated}レース / 表なし: ${empty} / 失敗: ${failed} / 対象外: ${skipped}`);
+  console.log(`[done] オッズを記録: ${updated}レース / 厳選適用: ${gensenApplied}レース / 表なし: ${empty} / 失敗: ${failed} / 対象外: ${skipped}`);
 }
 
 main().catch((e) => { console.error('[fatal]', e); process.exit(1); });

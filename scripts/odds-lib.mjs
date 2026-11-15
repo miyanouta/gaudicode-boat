@@ -80,3 +80,77 @@ export async function fetchRaceOdds(fetchHtml, base, { rno, jcd, hd }) {
   ]);
   return { odds: parseOdds3f(fHtml), oddsTan: parseOdds3t(tHtml) };
 }
+
+// ============================================================
+// 厳選セット (三連単・勝負) — 競輪と同じ理屈 (2026-11-15 採用)。
+// 323レース測定 (確定オッズ・参考値): 厳選FX 的中 36.6% / 回収 69.6%
+// (現行の勝負 23.8% / 65.0%、点数は同じ12点)。両日とも的中が安定。
+// 方式 (競輪 X4 と同一): 三連複の区分 (鉄板 / バランス追加分 /
+// 勝負追加分) ごとに最小オッズの組を1つ選び、区分平均が最小の区分を
+// 選定とする。三連単・勝負 = バランス追加の組 (set2) を固定し、
+// もう1組は鉄板の組 (set1)。ただし勝負追加分が選定のときは
+// set1 の代わりに勝負追加の組 (set3) を使う (入替)。常に2組の
+// 全順序 = 12点。発走前のみ適用し、発走後は凍結する (呼出側で制御)。
+// ============================================================
+const norm = (c) => String(c).split('-').map(Number).sort((a, b) => a - b).join('-');
+
+function pickGensenSet(oddsMap, planList) {
+  if (!oddsMap || !Array.isArray(planList) || !planList.length) return null;
+  const sets = [...new Set(planList.map(norm))].filter((c) => oddsMap[c] != null);
+  if (!sets.length) return null;
+  return sets.reduce((m, c) => (oddsMap[c] < oddsMap[m] ? c : m), sets[0]);
+}
+
+export function buildBoatGensen(plans, oddsMap) {
+  if (!plans || !oddsMap) return null;
+  const tep = (plans.teppan || []).map(norm);
+  const bal = (plans.balance || []).map(norm);
+  const sho = (plans.shoubu || []).map(norm);
+  const tepSet = new Set(tep);
+  const set1 = pickGensenSet(oddsMap, tep);
+  const balAdd = bal.filter((c) => !tepSet.has(c));
+  const set2 = pickGensenSet(oddsMap, balAdd);
+  const covered = new Set([...tep, ...bal]);
+  const shoAdd = sho.filter((c) => !covered.has(c));
+  const portionAvg = (list) => {
+    const vals = [...new Set(list)].filter((c) => oddsMap[c] != null).map((c) => oddsMap[c]);
+    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : Infinity;
+  };
+  const aT = portionAvg(tep);
+  const aB = portionAvg(balAdd);
+  const aS = portionAvg(shoAdd);
+  const selectedPortion = (aS <= aT && aS <= aB) ? 'shoubu' : (aT <= aB ? 'teppan' : 'balance');
+  let set3 = null;
+  if (selectedPortion === 'shoubu') {
+    const shoValid = shoAdd.filter((c) => oddsMap[c] != null && oddsMap[c] !== 9999.9);
+    set3 = pickGensenSet(oddsMap, shoValid);
+  }
+  const sets = (selectedPortion === 'shoubu' && set3) ? [set3, set2] : [set1, set2];
+  if (!set1 || !set2) return null; // 測定時の定義どおり、両ピックが揃わないレースは従来構成のまま
+  const out = [];
+  for (const s of sets) {
+    if (!s) continue;
+    const [a, b, c] = s.split('-').map(Number);
+    for (const p of [[a, b, c], [a, c, b], [b, a, c], [b, c, a], [c, a, b], [c, b, a]]) {
+      const t = p.join('→');
+      if (!out.includes(t)) out.push(t);
+    }
+  }
+  if (!out.length) return null;
+  return { orders: out, picks: { set1, set2, set3, selectedPortion } };
+}
+
+// レースに保存されたオッズから厳選版の三連単・勝負を構築し prediction に
+// 反映する。反映できたら true。構築できない場合は何もしない (勝負は
+// 従来構成のまま)。ピックは prediction.gensenPicks に保存し、
+// prediction.tanBasis='gensen' を立てる (競輪と同じ方式)。
+export function applyBoatGensen(race) {
+  const p = race && race.prediction;
+  if (!p || !p.plans || !p.plansTan || !race.odds) return false;
+  const g = buildBoatGensen(p.plans, race.odds);
+  if (!g) return false;
+  p.plansTan.shoubu = g.orders;
+  p.tanBasis = 'gensen';
+  p.gensenPicks = g.picks;
+  return true;
+}
