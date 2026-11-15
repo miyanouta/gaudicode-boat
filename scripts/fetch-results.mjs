@@ -22,6 +22,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { JSDOM } from 'jsdom';
+import { fetchRaceOdds } from './odds-lib.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36';
@@ -170,6 +171,18 @@ async function main() {
         else {
           r.result = { ...result, hits: evaluate(r, result) };
           updated++;
+          // 結果の初回記録時に確定オッズで上書きする (競輪と同じ方式)。
+          // 失敗しても結果の記録は妨げない (発走前オッズが残る)。
+          try {
+            const { odds, oddsTan } = await fetchRaceOdds(fetchHtml, BASE, { rno: r.no, jcd: v.id, hd });
+            if (Object.keys(odds).length >= 10 && Object.keys(oddsTan).length >= 60) {
+              r.odds = odds;
+              r.oddsTan = oddsTan;
+              r.oddsAt = new Date().toISOString();
+            }
+          } catch (e) {
+            console.log(`[results] ${v.name} ${r.no}R 確定オッズ取得失敗: ${e.message || e}`);
+          }
         }
       } catch (e) {
         failed++;

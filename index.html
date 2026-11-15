@@ -78,6 +78,8 @@
   .plan-panel{display:none;background:var(--panel2);border:1px solid rgba(255,255,255,.04);border-radius:11px;padding:11px 13px}
   .plan-panel.active{display:block}
   .plan-panel .combos{font-size:17px;font-weight:700;line-height:1.6}
+  .combos .odds, .pred-box .odds{font-size:12.5px;color:var(--accent2);font-weight:700;margin-left:3px}
+  .combo-hit .odds{color:#191102}
   .combo-hit{background:var(--gold-grad);color:#191102;border-radius:6px;padding:1px 8px;font-weight:800;box-shadow:0 2px 8px rgba(255,157,0,.4);white-space:nowrap}
   .plan-panel .ana{margin-top:8px;font-size:13.5px;color:var(--accent)}
   details.comment-fold{margin-top:12px}
@@ -92,6 +94,10 @@
   .empty{color:var(--sub);padding:26px 8px;text-align:center;line-height:1.8}
   .warn{background:#3a2b12;border:1px solid #6b5316;color:#ffd98a;border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:14px;line-height:1.7}
   footer{flex:none;padding:14px 16px;color:var(--sub);font-size:12px;border-top:1px solid var(--line);line-height:1.7}
+  .support{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
+  .support h5{margin:0 0 5px;font-size:13px;color:var(--text);font-weight:800;letter-spacing:.03em}
+  .support p{margin:0 0 9px}
+  .support a.support-btn{display:inline-block;background:var(--gold-grad);color:#191102;font-weight:800;font-size:13px;border-radius:999px;padding:7px 18px;text-decoration:none;box-shadow:0 3px 10px rgba(255,157,0,.3)}
   @media (max-width:760px){
     .layout{grid-template-columns:1fr;grid-template-rows:auto 1fr}
     .venues{border-right:0;border-bottom:1px solid var(--line)}
@@ -143,11 +149,29 @@
 
 <footer>
   データ出典: BOAT RACE オフィシャルウェブサイト（自動取得）。予想は GAUDICODE 競艇AI（スコア方式）の出力であり、的中・利益を保証するものではありません。舟券の購入はご自身の判断と責任で行ってください。
+  <div class="support" id="supportSection" style="display:none">
+    <h5>応援のお願い</h5>
+    <p>予想が役に立ったら、サイト運営の応援を任意でお願いしています。金額はお気持ちでかまいません（au PAYの送金は100円から）。</p>
+    <a class="support-btn" id="supportLink" href="#" target="_blank" rel="noopener noreferrer">au PAYで応援する</a>
+  </div>
 </footer>
 
 <script>
 const state = { data:null, venueIdx:0, raceIdx:0 };
 const $ = (id)=>document.getElementById(id);
+
+// ===== 応援（au PAY）設定 =====
+// au PAY の受け取りURLが決まったら、下の 'AUPAY_URL_PLACEHOLDER' を実際のURLに書き換える（変更はこの1行だけ）。
+// プレースホルダーのまま／空の間は、フッターの応援セクション（#supportSection）は表示されません。
+const AUPAY_URL = 'AUPAY_URL_PLACEHOLDER';
+function initSupport(){
+  if(!AUPAY_URL || AUPAY_URL === 'AUPAY_URL_PLACEHOLDER') return;
+  const sec = $('supportSection'), link = $('supportLink');
+  if(!sec || !link) return;
+  link.href = AUPAY_URL;
+  sec.style.display = '';
+}
+initSupport();
 
 function todayStr(){
   const d = new Date();
@@ -488,8 +512,8 @@ function renderContent(){
     html += '<div class="card"><h4>GAUDICODE予想</h4><div class="pred-grid">';
     if(p.honmei) html += '<div class="pred-box"><div class="k">本命</div><div class="v">◎ '+p.honmei.num+'号艇 '+esc(p.honmei.name)+'</div></div>';
     if(p.ana) html += '<div class="pred-box"><div class="k">穴候補</div><div class="v">'+p.ana.num+'号艇 '+esc(p.ana.name)+'</div><div style="font-size:12.5px;color:var(--sub)">'+esc(p.ana.reason)+'</div></div>';
-    if(p.sanrenpuku) html += '<div class="pred-box"><div class="k">三連複（スコア純正）</div><div class="v">'+p.sanrenpuku.map(cc=>wrapHit(esc(cc), hitPuku(cc))).join(' ／ ')+'</div></div>';
-    if(p.sanrentan) html += '<div class="pred-box"><div class="k">三連単（スコア純正）</div><div class="v">'+p.sanrentan.map(cc=>wrapHit(esc(cc), hitTan(cc))).join(' ／ ')+'</div></div>';
+    if(p.sanrenpuku) html += '<div class="pred-box"><div class="k">三連複（スコア純正）</div><div class="v">'+p.sanrenpuku.map(cc=>{ const o = r.odds && r.odds[cc.split('-').map(Number).sort((a,b)=>a-b).join('-')]; return wrapHit(esc(cc) + (o ? '<span class="odds">' + o.toFixed(1) + '倍</span>' : ''), hitPuku(cc)); }).join(' ／ ')+'</div></div>';
+    if(p.sanrentan) html += '<div class="pred-box"><div class="k">三連単（スコア純正）</div><div class="v">'+p.sanrentan.map(cc=>{ const o = r.oddsTan && r.oddsTan[cc.replace(/→/g,'-')]; return wrapHit(esc(cc) + (o ? '<span class="odds">' + o.toFixed(1) + '倍</span>' : ''), hitTan(cc)); }).join(' ／ ')+'</div></div>';
     html += '</div>';
 
     // プラン（鉄板/バランス/勝負）タブ表示
@@ -499,12 +523,27 @@ function renderContent(){
       const defaultTier = p.plans.balance ? 'balance' : (tiers[0] && tiers[0][0]);
       html += '<div class="plan-tabs">' + tiers.map(([k,label])=>
         '<button class="plan-tab'+(k===defaultTier?' active':'')+'" onclick="switchPlan(this,\''+k+'\')">'+label+'（'+p.plans[k].length+'点）</button>').join('') + '</div>';
+      // 区分別平均オッズ（鉄板／バランス追加分／勝負追加分、除外なしの単純平均。競輪と同じ方式）
+      const normC = c => c.split('-').map(Number).sort((a,b)=>a-b).join('-');
+      const planSet = {};
+      ['teppan','balance','shoubu'].forEach(k=>{ planSet[k] = new Set((p.plans[k]||[]).map(normC)); });
+      const portionCombos = k => k==='teppan' ? [...planSet.teppan]
+        : k==='balance' ? [...planSet.balance].filter(c=>!planSet.teppan.has(c))
+        : [...planSet.shoubu].filter(c=>!planSet.balance.has(c));
+      const avgLabels = { teppan:'鉄板の平均オッズ', balance:'バランス追加分の平均オッズ', shoubu:'勝負追加分の平均オッズ' };
+      const avgText = {};
+      if(r.odds){
+        tiers.forEach(([k])=>{
+          const os = portionCombos(k).map(c=>r.odds[c]).filter(o=>typeof o==='number' && Number.isFinite(o));
+          if(os.length) avgText[k] = avgLabels[k] + ' ' + (os.reduce((a,b)=>a+b,0)/os.length).toFixed(1) + '倍';
+        });
+      }
       html += tiers.map(([k])=>
-        '<div class="plan-panel'+(k===defaultTier?' active':'')+'" data-plan="'+k+'"><div class="k" style="font-size:12px;color:var(--sub);margin-bottom:4px">三連複</div><div class="combos">'+p.plans[k].map(cc=>wrapHit(esc(cc), hitPuku(cc))).join(' ／ ')+'</div>' +
-        (p.plansTan && p.plansTan[k] ? '<div class="k" style="font-size:12px;color:var(--sub);margin:8px 0 4px">三連単</div><div class="combos" style="font-size:15px">'+p.plansTan[k].map(cc=>wrapHit(esc(cc), hitTan(cc))).join(' ／ ')+'</div>' : '') +
+        '<div class="plan-panel'+(k===defaultTier?' active':'')+'" data-plan="'+k+'"><div class="k" style="font-size:12px;color:var(--sub);margin-bottom:4px">三連複</div>' + (avgText[k] ? '<div style="font-size:12px;color:var(--sub);margin-bottom:4px">'+avgText[k]+'</div>' : '') + '<div class="combos">'+p.plans[k].map(cc=>{ const o = r.odds && r.odds[cc.split('-').map(Number).sort((a,b)=>a-b).join('-')]; return wrapHit(esc(cc) + (o ? '<span class="odds">' + o.toFixed(1) + '倍</span>' : ''), hitPuku(cc)); }).join(' ／ ')+'</div>' +
+        (p.plansTan && p.plansTan[k] ? '<div class="k" style="font-size:12px;color:var(--sub);margin:8px 0 4px">三連単</div><div class="combos" style="font-size:15px">'+p.plansTan[k].map(cc=>{ const o = r.oddsTan && r.oddsTan[cc.replace(/→/g,'-')]; return wrapHit(esc(cc) + (o ? '<span class="odds">' + o.toFixed(1) + '倍</span>' : ''), hitTan(cc)); }).join(' ／ ')+'</div>' : '') +
         (k==='shoubu' && p.ana ? '<div class="ana">穴候補: '+p.ana.num+'号艇 '+esc(p.ana.name)+'（'+esc(p.ana.reason)+'）</div>' : '') +
         '</div>').join('');
-      html += '<div style="font-size:12px;color:var(--sub);margin-top:6px">鉄板は穴候補を中心にした買い目（全点に穴候補入り）。バランスは鉄板にスコア純正を足したもの、勝負はバランスに中核5艇のボックスを併合したものです。三連単・勝負は本命を1着に固定したフォーメーションです。展示タイムが出たレースは、発走前に展示を反映した予想へ更新されます（展示zスコア×2.0を合成。「展示反映」チップ付き）。</div>';
+      html += '<div style="font-size:12px;color:var(--sub);margin-top:6px">鉄板は穴候補を中心にした買い目（全点に穴候補入り）。バランスは鉄板にスコア純正を足したもの、勝負はバランスに中核5艇のボックスを併合したものです。三連単・勝負は本命を1着に固定したフォーメーションです。展示タイムが出たレースは、発走前に展示を反映した予想へ更新されます（展示zスコア×2.0を合成。「展示反映」チップ付き）。' + (r.odds ? '買い目横の数字はオッズ（取得時点）です。' : '') + '</div>';
     }
 
     if(p.comment) html += '<details class="comment-fold"><summary>コメントを読む</summary><div class="comment" style="margin-top:8px">'+esc(p.comment)+'</div></details>';
