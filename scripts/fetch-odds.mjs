@@ -8,11 +8,13 @@
 // 確定オッズは fetch-results が結果の初回記録時に上書きする)。
 //
 // 使い方:
-//   node scripts/fetch-odds.mjs [YYYY-MM-DD] [--venue=02] [--all]
+//   node scripts/fetch-odds.mjs [YYYY-MM-DD] [--venue=02] [--all] [--final]
 // 対象 (通常モード): 今日のファイルで、発走時刻が [現在-5分, 現在+150分]
 //   の未発走・結果なしレース。日中の結果ワークフローから30分ごとに
 //   呼ばれる前提で、発走が近いレースのオッズを新しい状態に保つ。
 // --all: その日の未発走・結果なしレースを全て対象にする (朝の生成用)。
+// --final: 結果確定済みレースを対象に、確定オッズで埋める/上書きする
+//   (過去日のバックフィル用)。
 // ============================================================
 import fs from 'node:fs';
 import path from 'node:path';
@@ -64,6 +66,7 @@ async function main() {
   const dateStr = args.find((a) => /^\d{4}-\d{2}-\d{2}$/.test(a)) || jstNow().date;
   const venueFilter = (args.find((a) => a.startsWith('--venue=')) || '').split('=')[1] || null;
   const all = args.includes('--all');
+  const finalMode = args.includes('--final');
   const dataPath = path.join(ROOT, 'data', `${dateStr}.json`);
   if (!fs.existsSync(dataPath)) throw new Error(`data/${dateStr}.json がありません。先に出走表を取得してください。`);
   const data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
@@ -76,8 +79,10 @@ async function main() {
   for (const v of data.venues) {
     if (venueFilter && v.id !== venueFilter.padStart(2, '0')) continue;
     for (const r of v.races) {
-      if (r.result) { skipped++; continue; }
-      if (!all) {
+      if (finalMode) {
+        if (!r.result) { skipped++; continue; }
+      } else if (r.result) { skipped++; continue; }
+      if (!all && !finalMode) {
         // 通常モードは今日のファイルだけ・発走ウィンドウ内だけ
         if (dateStr !== now.date || !r.startTime) { skipped++; continue; }
         const st = toMin(r.startTime);
