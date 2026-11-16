@@ -123,6 +123,10 @@
     .venues h2{display:none}
     .venue-list{display:none}
     .venue-select{display:block;width:calc(100% - 20px);margin:9px 10px;background:var(--panel2);color:var(--accent);border:1px solid var(--accent);border-radius:9px;padding:10px 12px;font-size:19px;font-weight:900;letter-spacing:.06em}
+    main{padding:14px 10px 30px}
+    table{min-width:0;font-size:12.5px}
+    th,td{padding:5px 4px}
+    table th:nth-child(5),table td:nth-child(5),table th:nth-child(6),table td:nth-child(6){display:none}
   }
   .bchip{display:inline-block;min-width:19px;height:19px;border-radius:50%;border:1px solid #888;text-align:center;line-height:19px;font-size:11.5px;font-weight:800;vertical-align:-4px;margin-right:4px;padding:0 2px}
   .cat-chip{display:inline-block;border-radius:999px;padding:1px 9px;font-size:11.5px;font-weight:800;margin-left:6px;vertical-align:2px}
@@ -589,12 +593,17 @@ function renderContent(){
         const gsSets = (swapped ? [gp.set3, gp.set2] : [gp.set1, gp.set2]).filter(Boolean).map(normC);
         const gsLabels = swapped ? ['勝負追加（選定）','バランス追加'] : ['鉄板','バランス追加'];
         if(gsSets.length >= 2){
-          const gsOrders = p.plansTan.shoubu.slice();
+          // 表示順はオッズの低い順 (ラベルは組と一緒に動く。オッズ無しの組は最後)
+          const pairs = gsSets.map((s,i)=>({ s, label: gsLabels[i], o: (r.odds && r.odds[s]) ? r.odds[s] : Infinity }));
+          pairs.sort((a,b)=>a.o-b.o);
+          const gsSetsSorted = pairs.map(p=>p.s);
+          const gsLabelsSorted = pairs.map(p=>p.label);
+          const gsOrders = p.plansTan.shoubu.slice().sort((a,b)=> gsSetsSorted.indexOf(normC(a.replace(/→/g,'-'))) - gsSetsSorted.indexOf(normC(b.replace(/→/g,'-'))));
           const tanHitG = gsOrders.some(o=>hitTan(o));
           const fukuHitG = gsSets.some(s=>hitPuku(s));
           html += '<div class="gensen-box">' +
             '<div class="gensen-title">✦ 厳選セット' + (fukuHitG ? ' <span class="hit-badge hit">🎯 三連複的中</span>' : '') + (tanHitG ? ' <span class="hit-badge hit">🎯 三連単的中</span>' : '') + '</div>' +
-            gsSets.map((s,i)=>{ const o = (r.odds && r.odds[s]) ? r.odds[s].toFixed(1) + '倍' : 'オッズ無し'; const hit = hitPuku(s); return '<div class="gensen-chip' + (hit ? ' hit' : '') + '"><span class="tag">' + gsLabels[i] + '</span><span class="set">' + esc(s) + '</span>' + (hit ? '<span>🎯</span>' : '') + '<span class="odds">' + o + '</span></div>'; }).join('') +
+            gsSetsSorted.map((s,i)=>{ const o = (r.odds && r.odds[s]) ? r.odds[s].toFixed(1) + '倍' : 'オッズ無し'; const hit = hitPuku(s); return '<div class="gensen-chip' + (hit ? ' hit' : '') + '"><span class="tag">' + gsLabelsSorted[i] + '</span><span class="set">' + esc(s) + '</span>' + (hit ? '<span>🎯</span>' : '') + '<span class="odds">' + o + '</span></div>'; }).join('') +
             '<div style="font-size:12px;color:var(--sub);margin:8px 0 4px">厳選セットの並び（三連単）</div>' +
             '<div class="combos" style="font-size:15px">' + gsOrders.map(o=>wrapHit(esc(o), hitTan(o))).join(' ／ ') + '</div>' +
             '</div>';
