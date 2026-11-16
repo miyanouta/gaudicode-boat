@@ -357,7 +357,7 @@ async function refreshResultsStatic(dateStr, silent){
   // 朝の出走表が新しくなっただけでも反応する)
   const sig = (d) => d ? ((d.resultsUpdatedAt || '') + '|' + (d.generatedAt || '') + '|' + (d.oddsUpdatedAt || '')) : null;
   const before = sig(state.data);
-  const res = await fetch('data/'+dateStr+'.json?ts='+Date.now(), {cache:'no-store'});
+  const res = await fetch('../data/'+dateStr+'.json?ts='+Date.now(), {cache:'no-store'});
   if(!res.ok) throw new Error('not found');
   const fresh = await res.json();
   const after = sig(fresh);
