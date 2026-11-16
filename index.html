@@ -452,6 +452,22 @@ function renderVenues(){
   if(act) act.scrollIntoView({ block: 'center' });
 }
 
+// 無料表示の制限 (2026-11-17以降のデータが対象): その日の全場を通じて発走順の最初の3レースだけ予想を表示し、
+// 残りは有料版への案内にする。過去日は履歴 (結果・実績) として全表示する。(2026-11-16 ユーザー決定)
+const FREE_LIMIT_FROM = '2026-11-17';
+const FREE_RACE_COUNT = 3;
+function freeRaceSet(){
+  if(!state.data || !state.data.date || state.data.date < FREE_LIMIT_FROM) return null;
+  const all = [];
+  state.data.venues.forEach((v, vi)=>{ v.races.forEach((r, ri)=>{ if(r.status==='ready') all.push({ vi, ri, t: r.startTime || '99:99' }); }); });
+  all.sort((a,b)=> a.t < b.t ? -1 : a.t > b.t ? 1 : (a.vi - b.vi) || (a.ri - b.ri));
+  return new Set(all.slice(0, FREE_RACE_COUNT).map(x=>x.vi + '-' + x.ri));
+}
+function isRaceLocked(vi, ri){
+  const s = freeRaceSet();
+  return !!s && !s.has(vi + '-' + ri);
+}
+
 function renderRaces(){
   const el = $('raceList'); el.innerHTML='';
   const v = state.data.venues[state.venueIdx];
@@ -469,7 +485,7 @@ function renderRaces(){
       else if(h.shoubu) chips += '<span class="hit-chip chip-sho">勝</span>';
       if(h.tanTeppan||h.tanBalance||h.tanShoubu) chips += '<span class="hit-chip chip-tan">単</span>';
     }
-    b.innerHTML = r.no + 'R' + (manHit?'💴':'') + chips + (r.startTime? '<span class="rt">'+r.startTime+'</span>' : '');
+    b.innerHTML = r.no + 'R' + (isRaceLocked(state.venueIdx, i)?'🔒':'') + (manHit?'💴':'') + chips + (r.startTime? '<span class="rt">'+r.startTime+'</span>' : '');
     b.onclick = ()=>{ state.raceIdx=i; renderRaces(); renderContent(); };
     el.appendChild(b);
   });
@@ -525,6 +541,8 @@ function renderContent(){
     html += '</div>';
   }
 
+  const locked = isRaceLocked(state.venueIdx, state.raceIdx);
+
   // 出走表
   const tenjiMap = (r.preinfo && r.preinfo.tenji) ? r.preinfo.tenji : null;
   const tenjiOn = !!(r.prediction && r.prediction.tenjiApplied);
@@ -533,20 +551,20 @@ function renderContent(){
     '</tr></thead><tbody>';
   r.racers.forEach(x=>{
     const hon = x.mark==='◎' ? ' hon':'';
-    html += '<tr><td class="mark'+hon+'">'+esc(x.mark||'')+'</td><td>'+boatChip(x.num)+'</td>' +
+    html += '<tr><td class="mark'+hon+'">'+(locked?'—':esc(x.mark||''))+'</td><td>'+boatChip(x.num)+'</td>' +
       '<td class="name">'+esc(x.name)+'</td><td>'+esc(x.class)+'</td>' +
       '<td>'+esc(x.branch||'')+'</td><td>'+x.age+'歳/'+Number(x.weight).toFixed(1)+'kg</td>' +
       '<td>'+Number(x.winRateAll).toFixed(2)+'</td><td>'+Number(x.winRateLocal).toFixed(2)+'</td>' +
       '<td>'+(x.motorNo!=null? x.motorNo+'番 ' : '')+Number(x.motorRate).toFixed(2)+'%</td>' +
       '<td>'+(x.boatNo!=null? x.boatNo+'番 ' : '')+Number(x.boatRate).toFixed(2)+'%</td>' +
       (tenjiMap? '<td>'+(tenjiMap[x.num]!=null? Number(tenjiMap[x.num]).toFixed(2) : '—')+'</td>' : '') +
-      '<td>'+Number(tenjiOn && x.scoreT!=null ? x.scoreT : x.score).toFixed(2)+'</td></tr>';
+      '<td>'+(locked?'—':Number(tenjiOn && x.scoreT!=null ? x.scoreT : x.score).toFixed(2))+'</td></tr>';
   });
   html += '</tbody></table><div style="margin-top:6px;font-size:12.5px;color:var(--sub)">モーター/ボートは「番号・2連率」。スコアは全国勝率・当地勝率・モーター/ボート2連率・級別・枠番有利度を合成したGAUDICODE競艇AIの評価値です（高いほど有力）。' + (tenjiOn ? 'このレースは展示反映後の合成スコアを表示しています。' : '') + '</div></div>';
 
   // 予想
   const p = r.prediction;
-  if(p){
+  if(p && !locked){
     const winPukuKey = r.result ? (r.result.sanrenpuku ? r.result.sanrenpuku.combo.split('-').map(Number).sort((a,b)=>a-b).join('-') : (r.result.top3 ? [...r.result.top3].sort((a,b)=>a-b).join('-') : null)) : null;
     const winTanKey = r.result ? (r.result.sanrentan ? r.result.sanrentan.combo.split('-').map(Number).join('-') : (r.result.top3 ? r.result.top3.join('-') : null)) : null;
     const hitPuku = cc => !!winPukuKey && cc.split('-').map(Number).sort((a,b)=>a-b).join('-') === winPukuKey;
@@ -615,6 +633,9 @@ function renderContent(){
 
     if(p.comment) html += '<details class="comment-fold"><summary>コメントを読む</summary><div class="comment" style="margin-top:8px">'+esc(p.comment)+'</div></details>';
     html += '</div>';
+  }
+  if(locked){
+    html += '<div class="card"><h4>GAUDICODE予想</h4><div class="empty">🔒 このレースの予想は有料版で公開しています。<br>無料ページでは、その日の最初の3レースの予想と、過去の結果・実績を公開しています。<br><a href="https://miyanouta.booth.pm/items/9162849" target="_blank" rel="noopener" style="color:#d4af37;font-weight:700">BOOTHで有料版を見る（買い切り ¥2,980）</a></div></div>';
   }
   c.innerHTML = html;
 }
