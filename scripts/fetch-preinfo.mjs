@@ -160,7 +160,7 @@ async function main() {
     for (const r of v.races) {
       if (r.preinfo || !r.startTime) continue;
       const start = toMin(r.startTime);
-      if (date === now.date && (start < now.minutes - 20 || start > now.minutes + 75)) continue;
+      if (date === now.date && (start < now.minutes - 30 || start > now.minutes + 150)) continue;
       fetched++;
       try {
         const html = await fetchHtml(`${BASE}/beforeinfo?rno=${r.no}&jcd=${v.id}&hd=${hd}`);

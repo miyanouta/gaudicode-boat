@@ -1,0 +1,59 @@
+name: 直前情報（展示）を自動更新
+
+# JST 7:00〜23:50 の間、10分ごとに今日の展示を取得して展示反映する。
+# 結果更新 (30分ごと) と分離した理由: 展示は発走の少し前に公開されるため、
+# 30分間隔の後段ステップでは取りこぼしが多かった (2026-11-16 改善)。
+# 取得・反映は GAUDICODE 本体を使わないため Muse のポイントは消費しない。
+on:
+  schedule:
+    - cron: "*/10 22,23,0-14 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: boat-preinfo
+  cancel-in-progress: false
+
+jobs:
+  preinfo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm install --no-audit --no-fund
+      - name: 今日の直前情報（展示）を取得
+        timeout-minutes: 8
+        run: |
+          TODAY=$(TZ=Asia/Tokyo date +%F)
+          if [ -f "data/${TODAY}.json" ]; then
+            node scripts/fetch-preinfo.mjs "${TODAY}"
+          else
+            echo "今日のデータがまだ無いのでスキップ"
+          fi
+      - name: 直前情報をコミット
+        run: |
+          git config user.name "gaudi-bot"
+          git config user.email "bot@example.com"
+          pushed=0
+          for attempt in 1 2 3; do
+            git add data/
+            if git diff --cached --quiet; then pushed=1; break; fi
+            git commit -m "data: 直前情報を自動更新（展示専用）"
+            if git push; then pushed=1; break; fi
+            echo "push が競合しました。最新を取り込んで再取得してから再試行します (attempt ${attempt})"
+            git fetch origin
+            git reset --hard origin/main
+            TODAY=$(TZ=Asia/Tokyo date +%F)
+            if [ -f "data/${TODAY}.json" ]; then
+              node scripts/fetch-preinfo.mjs "${TODAY}" || true
+            fi
+          done
+          if [ "${pushed}" != "1" ]; then
+            echo "直前情報の push に失敗しました"
+            exit 1
+          fi
