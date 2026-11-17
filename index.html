@@ -144,9 +144,8 @@
   .ticker{flex:none;overflow:hidden;background:linear-gradient(90deg,rgba(255,176,32,.16),rgba(255,176,32,.04));border-bottom:1px solid var(--line);white-space:nowrap}
   .ticker-inner{display:inline-block;padding:7px 0;font-size:13.5px;font-weight:700;animation:tickmove 40s linear infinite;will-change:transform}
   @keyframes tickmove{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-  .booth-banner{flex:none;padding:18px 12px 6px;text-align:center}
-  .booth-banner a{display:inline-block;max-width:300px;width:100%}
-  .booth-banner img{width:100%;height:auto;border-radius:10px;border:1px solid rgba(255,176,32,.45);display:block}
+  .booth-banner{flex:none;padding:14px 12px 4px;text-align:center}
+  .booth-banner .bb-link{display:inline-block;padding:8px 18px;border:1px solid rgba(255,176,32,.55);border-radius:999px;color:#ffb020;font-size:13px;font-weight:700;text-decoration:none}
   .booth-banner .bb-note{font-size:11.5px;color:#9fb3c8;margin-top:5px}
 </style>
 <style>#fetchBtn{display:none!important}</style></head>
@@ -178,7 +177,7 @@
 <footer>
   データ出典: BOAT RACE オフィシャルウェブサイト（自動取得）。予想は GAUDICODE 競艇AI（スコア方式）の出力であり、的中・利益を保証するものではありません。舟券の購入はご自身の判断と責任で行ってください。
   <div class="booth-banner" id="boothBanner">
-    <a href="https://miyanouta.booth.pm/items/9162849" target="_blank" rel="noopener"><img src="booth-banner.png" alt="GAUDICODE 競艇予想 買い切り版 ¥2,980 全レースの予想が見られます"></a>
+    <a class="bb-link" href="https://miyanouta.booth.pm/items/9162849" target="_blank" rel="noopener">全レース版（買い切り ¥2,980）はこちら</a>
     <div class="bb-note">無料版は時間帯ごと（モーニング／デイ／ナイター／ミッドナイト）の最初の3レースのみ表示。全レースの予想は買い切り版（¥2,980・追加料金なし）で見られます</div>
   </div>
   <div class="support" id="supportSection" style="display:none">
