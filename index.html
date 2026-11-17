@@ -164,7 +164,7 @@
 <div class="ticker" id="ticker" style="display:none"><div class="ticker-inner" id="tickerInner"></div></div>
 <div class="booth-banner" id="boothBanner">
   <a href="https://miyanouta.booth.pm/items/9162849" target="_blank" rel="noopener"><img src="booth-banner.png" alt="GAUDICODE 競艇予想 買い切り版 ¥2,980 全レースの予想が見られます"></a>
-  <div class="bb-note">無料版は本日の最初の3レースのみ表示。全レースの予想は買い切り版（¥2,980・追加料金なし）で見られます</div>
+  <div class="bb-note">無料版は時間帯ごと（モーニング／デイ／ナイター／ミッドナイト）の最初の3レースのみ表示。全レースの予想は買い切り版（¥2,980・追加料金なし）で見られます</div>
 </div>
 
 <div class="layout">
@@ -460,16 +460,21 @@ function renderVenues(){
   if(act) act.scrollIntoView({ block: 'center' });
 }
 
-// 無料表示の制限 (2026-11-17以降のデータが対象): その日の全場を通じて発走順の最初の3レースだけ予想を表示し、
-// 残りは有料版への案内にする。過去日は履歴 (結果・実績) として全表示する。(2026-11-16 ユーザー決定)
+// 無料表示の制限 (2026-11-17以降のデータが対象): 時間帯カテゴリ (モーニング/デイ/ナイター/ミッドナイト) ごとに
+// 発走順の最初の3レースだけ予想を表示し、残りは有料版への案内にする。過去日は履歴 (結果・実績) として全表示する。
+// (2026-11-16 ユーザー決定→2026-11-17 カテゴリ別に拡張)
 const FREE_LIMIT_FROM = '2026-11-17';
 const FREE_RACE_COUNT = 3;
 function freeRaceSet(){
   if(!state.data || !state.data.date || state.data.date < FREE_LIMIT_FROM) return null;
-  const all = [];
-  state.data.venues.forEach((v, vi)=>{ v.races.forEach((r, ri)=>{ if(r.status==='ready') all.push({ vi, ri, t: r.startTime || '99:99' }); }); });
-  all.sort((a,b)=> a.t < b.t ? -1 : a.t > b.t ? 1 : (a.vi - b.vi) || (a.ri - b.ri));
-  return new Set(all.slice(0, FREE_RACE_COUNT).map(x=>x.vi + '-' + x.ri));
+  const byCat = {};
+  state.data.venues.forEach((v, vi)=>{ const cat = v.category || 'デイ'; v.races.forEach((r, ri)=>{ if(r.status==='ready'){ (byCat[cat] = byCat[cat] || []).push({ vi, ri, t: r.startTime || '99:99' }); } }); });
+  const out = new Set();
+  Object.values(byCat).forEach(list=>{
+    list.sort((a,b)=> a.t < b.t ? -1 : a.t > b.t ? 1 : (a.vi - b.vi) || (a.ri - b.ri));
+    list.slice(0, FREE_RACE_COUNT).forEach(x=> out.add(x.vi + '-' + x.ri));
+  });
+  return out;
 }
 function isRaceLocked(vi, ri){
   const s = freeRaceSet();
