@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GAUDICODE 競艇予想｜毎日自動更新・展示反映の全レース予想</title>
+<meta name="description" content="競艇（ボートレース）予想を毎日全レース自動で公開。展示タイムを反映した予想と、的中率・回収率の正直な実績開示。無料ページあり、全レース版は買い切り¥2,980。">
+<meta property="og:title" content="GAUDICODE 競艇予想｜展示反映・全レース予想">
+<meta property="og:description" content="毎日の競艇予想を自動更新。展示反映レースの三連単・勝負は的中41.0%・回収123.2%（11/17実績）。全買いではプラスにならないことも正直に書いています。">
+<meta property="og:type" content="website">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif; background:#070f26; color:#eef1f8; line-height:1.7; padding-bottom:96px; }
+  .hero { background:linear-gradient(160deg,#0a1633 0%,#12275e 55%,#0a1633 100%); text-align:center; padding:52px 20px 40px; border-bottom:3px solid #d4af37; }
+  .brand { color:#d4af37; letter-spacing:.35em; font-size:13px; font-weight:700; }
+  h1 { font-size:34px; line-height:1.3; margin:12px 0 6px; }
+  h1 .gold { color:#d4af37; }
+  .sub { color:#b9c4de; font-size:15px; }
+  .badges { margin-top:18px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+  .badge { border:1px solid #d4af37; color:#f3d67b; border-radius:999px; padding:4px 14px; font-size:13px; font-weight:700; }
+  .wrap { max-width:640px; margin:0 auto; padding:0 16px; }
+  section { margin-top:36px; }
+  h2 { font-size:21px; border-left:5px solid #d4af37; padding-left:10px; margin-bottom:14px; }
+  .cards { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .card { background:#101d42; border:1px solid #26376b; border-radius:12px; padding:16px 12px; text-align:center; }
+  .card .label { font-size:13px; color:#b9c4de; }
+  .card .num { font-size:30px; font-weight:800; color:#fff; line-height:1.25; }
+  .card .num small { font-size:14px; color:#b9c4de; font-weight:400; }
+  .card.hot { border-color:#d4af37; background:#182a5e; }
+  .card.hot .num { color:#f3d67b; }
+  .note { font-size:12px; color:#8fa0c4; margin-top:8px; }
+  .honest { background:#2a1408; border:1px solid #b96a1e; border-radius:12px; padding:16px; }
+  .honest h2 { border-color:#e07b24; }
+  .honest p { font-size:14px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { border:1px solid #26376b; padding:9px 8px; text-align:center; }
+  th { background:#101d42; color:#f3d67b; }
+  td:first-child, th:first-child { text-align:left; }
+  .btn { display:block; text-align:center; border-radius:12px; padding:16px; font-size:17px; font-weight:800; text-decoration:none; margin-top:12px; }
+  .btn-free { background:#1d326e; color:#fff; border:1px solid #3a56a8; }
+  .btn-buy { background:linear-gradient(180deg,#e8c65a,#c49a25); color:#231a02; }
+  .price { font-size:26px; }
+  ul.tick { list-style:none; font-size:15px; }
+  ul.tick li { padding:6px 0 6px 26px; position:relative; }
+  ul.tick li::before { content:"✓"; position:absolute; left:2px; color:#d4af37; font-weight:800; }
+  .cta-bar { position:fixed; left:0; right:0; bottom:0; background:rgba(7,15,38,.96); border-top:2px solid #d4af37; padding:10px 12px calc(10px + env(safe-area-inset-bottom)); display:flex; gap:10px; z-index:10; }
+  .cta-bar a { flex:1; text-align:center; border-radius:10px; padding:13px 4px; font-weight:800; font-size:15px; text-decoration:none; }
+  .cta-bar .f { background:#1d326e; color:#fff; border:1px solid #3a56a8; }
+  .cta-bar .b { background:linear-gradient(180deg,#e8c65a,#c49a25); color:#231a02; }
+  footer { text-align:center; color:#8fa0c4; font-size:12px; margin-top:44px; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="brand">GAUDICODE</div>
+  <h1>競艇予想<br><span class="gold">毎日・全レース・展示反映</span></h1>
+  <p class="sub">その日の全レースの出走表と予想を、毎朝自動で公開。<br>展示タイムが出たら、予想に反映します。</p>
+  <div class="badges">
+    <span class="badge">毎日自動更新</span>
+    <span class="badge">展示タイム反映</span>
+    <span class="badge">実績を正直に開示</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section>
+    <h2>直近の実績（11月17日・全125レース）</h2>
+    <div class="cards">
+      <div class="card">
+        <div class="label">三連単・勝負 的中率</div>
+        <div class="num">37.6<small>%</small></div>
+      </div>
+      <div class="card">
+        <div class="label">三連単・勝負 回収率</div>
+        <div class="num">95.7<small>%</small></div>
+      </div>
+      <div class="card hot">
+        <div class="label">展示反映レースだけだと 的中率</div>
+        <div class="num">41.0<small>%</small></div>
+      </div>
+      <div class="card hot">
+        <div class="label">展示反映レースだけだと 回収率</div>
+        <div class="num">123.2<small>%</small></div>
+      </div>
+    </div>
+    <p class="note">※展示反映レースは78レース。万舟も出ました：尼崎3R ¥19,330。数字は当日の確定結果からの実測です。1日分の実績であり、今後も同じ数字になる保証はありません。</p>
+  </section>
+
+  <section class="honest">
+    <h2>先に、正直な話をします</h2>
+    <p>この予想を<strong>全レース・全プラン買い続けても、プラス収支にはなりません</strong>。蓄積データ（160レース）での全プランの回収率は、いずれも100%を下回っています。だから買い方には工夫が要ります（下の「おすすめの買い方」参照）。的中や利益を保証するものでもありません。その代わり、実績の数字は良い日も悪い日もそのまま公開します。</p>
+  </section>
+
+  <section>
+    <h2>無料と全レース版の違い</h2>
+    <table>
+      <tr><th></th><th>無料ページ</th><th>全レース版</th></tr>
+      <tr><td>見られる予想</td><td>時間帯ごと最初の3レース</td><td><strong>その日の全レース</strong></td></tr>
+      <tr><td>過去の結果・実績</td><td>全部見られる</td><td>全部見られる</td></tr>
+      <tr><td>料金</td><td>無料</td><td>買い切り ¥2,980</td></tr>
+      <tr><td>追加料金・月額</td><td>なし</td><td><strong>なし</strong></td></tr>
+    </table>
+    <a class="btn btn-free" href="https://miyanouta.github.io/gaudicode-boat/">無料で今日の予想を見る</a>
+    <a class="btn btn-buy" href="https://miyanouta.booth.pm/items/9162849">全レース版（買い切り <span class="price">¥2,980</span>）をBOOTHで見る</a>
+    <p class="note">購入すると、購入者専用ページでその日の全レースの予想が見られます。一度買えば毎日の予想がそのまま見られ続けます。</p>
+  </section>
+
+  <section>
+    <h2>おすすめの買い方</h2>
+    <ul class="tick">
+      <li><strong>展示が反映されてから買う</strong> — 展示タイム反映後の予想は、朝の予想より数字が良い傾向です（11/17：反映レースの三連単・勝負 回収123.2%）</li>
+      <li>レースと買い目を絞る — 全買い前提の数字ではありません</li>
+      <li>無料ページで数日、数字の動きを見てから判断する</li>
+    </ul>
+    <p class="note">※競艇の予想は、展示の内容によってレース前に朝の予想から変わることがあります（ページ上で「展示反映」と表示されます）。</p>
+  </section>
+
+  <section>
+    <h2>仕組み</h2>
+    <ul class="tick">
+      <li>毎朝、その日の全レースの出走表と予想を自動生成</li>
+      <li>選手の勝率・モーター・ボートの数字に、展示タイムを組み合わせて予想</li>
+      <li>結果は30分ごとに自動で取り込み、的中・配当まで表示</li>
+      <li>買い切り方式なので、月額の払い忘れや解約手続きはありません</li>
+    </ul>
+  </section>
+
+  <footer>
+    GAUDICODE 競艇予想<br>
+    本ページの予想は情報提供を目的としたもので、的中・利益を保証するものではありません。舟券の購入は自己責任でお願いします。
+  </footer>
+
+</div>
+
+<div class="cta-bar">
+  <a class="f" href="https://miyanouta.github.io/gaudicode-boat/">無料で見る</a>
+  <a class="b" href="https://miyanouta.booth.pm/items/9162849">全レース版 ¥2,980</a>
+</div>
+
+</body>
+</html>
