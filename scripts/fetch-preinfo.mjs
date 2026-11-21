@@ -128,6 +128,12 @@ async function main() {
   const hd = date.replace(/-/g, '');
   const toMin = (t) => { const [h, m] = String(t).split(':').map(Number); return h * 60 + m; };
   let fetched = 0, stored = 0, skipped = 0, failed = 0, rebuilt = 0;
+  // 途中保存: ステップがタイムアウトで切られても、処理済みの展示を失わない (2026-11-21)
+  const saveDay = () => {
+    const tmp = file + '.tmp';
+    fs.writeFileSync(tmp, JSON.stringify(day, null, 1));
+    fs.renameSync(tmp, file);
+  };
 
   // 展示反映の再構築: 結果が無く、発走前で、まだ展示未反映のレースだけ。
   // 発走済み・結果ありのレースには絶対に触らない (的中判定の記録を守る)。
@@ -154,6 +160,7 @@ async function main() {
     if (venueArg && v.id !== venueArg) continue;
     for (const r of v.races) tryRebuild(v, r);
   }
+  if (rebuilt > 0) saveDay();
 
   for (const v of day.venues) {
     if (venueArg && v.id !== venueArg) continue;
@@ -175,6 +182,7 @@ async function main() {
           stored++;
           console.log(`${v.name} ${r.no}R (${r.startTime}): 展示 ${Object.keys(info.tenji).length}艇 保存`);
           tryRebuild(v, r);
+          saveDay();
         } else {
           skipped++;
           console.log(`${v.name} ${r.no}R (${r.startTime}): 展示未公開のため見送り`);
@@ -186,11 +194,7 @@ async function main() {
       await sleep(DELAY_MS);
     }
   }
-  if (stored > 0 || rebuilt > 0) {
-    const tmp = file + '.tmp';
-    fs.writeFileSync(tmp, JSON.stringify(day, null, 1));
-    fs.renameSync(tmp, file);
-  }
+  if (stored > 0 || rebuilt > 0) saveDay();
   console.log(`完了: 対象${fetched}件 / 保存${stored}件 / 未公開${skipped}件 / 失敗${failed}件 / 展示再構築${rebuilt}件`);
 }
 
