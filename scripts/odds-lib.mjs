@@ -140,6 +140,29 @@ export function buildBoatGensen(plans, oddsMap) {
   return { orders: out, picks: { set1, set2, set3, selectedPortion } };
 }
 
+// 予想の変更表示 (ユーザー指示 2026-11-25): 朝の公開後に予想を変える場合は、
+// 必ず変更前の「朝版」を prediction.morning に残し、変更時刻を
+// prediction.changedAt に記録する。表示側はこの2つで「変更」チップと
+// 朝版トグルを出す。変更は発走前だけ (呼び出し側のガードで担保)。
+// prev は変更前の { honmei, plans, plansTan } (plansTan は要ディープコピー)。
+export function notePredictionChange(race, prev, reason) {
+  const p = race && race.prediction;
+  if (!p || !prev) return;
+  const changed = JSON.stringify([prev.plans, prev.plansTan]) !== JSON.stringify([p.plans, p.plansTan]);
+  if (!changed) return;
+  if (!p.morning) {
+    p.morning = JSON.parse(JSON.stringify({ honmei: prev.honmei ?? null, ana: prev.ana ?? null, plans: prev.plans ?? null, plansTan: prev.plansTan ?? null, sanrenpuku: prev.sanrenpuku ?? null, sanrentan: prev.sanrentan ?? null }));
+  }
+  p.changedAt = new Date().toISOString();
+  // 変更理由は必ず事前に明示する (ユーザー指示 2026-11-25: 理由を後から
+  // 知ったら信頼を失う)。理由コードを蓄積する: 'gensen' | 'tenji'。
+  if (reason) {
+    const rs = new Set(p.changeReasons || []);
+    rs.add(reason);
+    p.changeReasons = [...rs];
+  }
+}
+
 // レースに保存されたオッズから厳選版の三連単・勝負を構築し prediction に
 // 反映する。反映できたら true。構築できない場合は何もしない (勝負は
 // 従来構成のまま)。ピックは prediction.gensenPicks に保存し、
@@ -149,8 +172,10 @@ export function applyBoatGensen(race) {
   if (!p || !p.plans || !p.plansTan || !race.odds) return false;
   const g = buildBoatGensen(p.plans, race.odds);
   if (!g) return false;
+  const prev = { honmei: p.honmei, ana: p.ana, plans: p.plans, plansTan: JSON.parse(JSON.stringify(p.plansTan)), sanrenpuku: p.sanrenpuku, sanrentan: p.sanrentan };
   p.plansTan.shoubu = g.orders;
   p.tanBasis = 'gensen';
   p.gensenPicks = g.picks;
+  notePredictionChange(race, prev, 'gensen');
   return true;
 }

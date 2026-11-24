@@ -142,9 +142,22 @@ async function main() {
     if (r.status !== 'ready' || r.result || !r.startTime) return false;
     const future = date > now.date || (date === now.date && toMin(r.startTime) > now.minutes);
     if (!future) return false;
+    // 朝固定版の印を残す (再構築で racers の mark が付け替わる前に保存)
+    if (!r.morningMarks) r.morningMarks = Object.fromEntries(r.racers.map((x) => [x.num, x.mark || '']));
     const np = rebuildWithTenji(r.racers, r.preinfo.tenji);
     if (!np) return false;
     np.pre = { honmei: r.prediction.honmei, plans: r.prediction.plans, plansTan: r.prediction.plansTan };
+    // 変更表示 (ユーザー指示 2026-11-25): 朝版を morning に引き継ぎ、変更時刻と
+    // 理由を記録する。既に厳選差し替えで morning が付いている場合は最初の
+    // 朝版を保持。展示反映で実際に買い目が変わった場合だけ理由 'tenji' を足す。
+    np.morning = r.prediction.morning || JSON.parse(JSON.stringify({ honmei: r.prediction.honmei ?? null, ana: r.prediction.ana ?? null, plans: r.prediction.plans ?? null, plansTan: r.prediction.plansTan ?? null, sanrenpuku: r.prediction.sanrenpuku ?? null, sanrentan: r.prediction.sanrentan ?? null }));
+    if (JSON.stringify([np.plans, np.plansTan]) !== JSON.stringify([np.morning.plans, np.morning.plansTan])) {
+      np.changedAt = new Date().toISOString();
+      np.changeReasons = [...new Set([...(r.prediction.changeReasons || []), 'tenji'])];
+    } else if (r.prediction.changedAt) {
+      np.changedAt = r.prediction.changedAt;
+      np.changeReasons = r.prediction.changeReasons;
+    }
     np.basis = 'tenji';
     np.tenjiApplied = true;
     r.prediction = np;
