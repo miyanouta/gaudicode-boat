@@ -53,20 +53,31 @@ r.score = Math.round((2.2 * zAll[i] + 1.6 * zMot[i] + 1.2 * zLoc + 0.8 * zBoat[i
 // スコア取得関数 scoreOf(racer) を使って印・本命・穴・買い目を構築する。
 // 印は各艇の mark にセットする。scoreOf が事前スコアを返せば従来の予想と
 // 完全に同一、合成スコアを返せば展示反映の予想になる。
-export function buildPredictionWithScores(racers, scoreOf) {
+export function buildPredictionWithScores(racers, scoreOf, anaRule = 'motor') {
 const ranked = [...racers].sort((a, b) => scoreOf(b) - scoreOf(a) || a.num - b.num);
 const MARKS = ['◎', '○', '▲', '△', '△', '△'];
 ranked.forEach((r, i) => { r.mark = MARKS[i] || '△';});
 const [hon, tai, san] = ranked;
-// 穴候補: スコア4〜6位からモーター2連率トップ (同点は当地勝率→スコア順)
+// 穴候補: 既定はスコア4〜6位からモーター2連率トップ (同点は当地勝率→スコア順)。
+// 'score4' はスコア4位をそのまま穴にする (C3-lite、ユーザー採用 2026-11-25)。
+// 測定 (2026-11-13〜24、12日間・1,753レース): 朝の事前予想だけに score4 を
+// 適用すると三連単が全段で両方アップ (鉄板 7.6%/64.6%→9.6%/94.7%、
+// バランス 15.8%/65.4%→18.5%/95.2%、勝負 30.5%/61.6%→35.3%/81.5%)。
+// 展示反映にまで適用すると回収が落ちたため、展示版は motor のまま。
 const anaPool = ranked.slice(3);
-const ana = [...anaPool].sort((a, b) => b.motorRate - a.motorRate || b.winRateLocal - a.winRateLocal || scoreOf(b) - scoreOf(a))[0];
+const ana = anaRule === 'score4'
+? ranked[3]
+: [...anaPool].sort((a, b) => b.motorRate - a.motorRate || b.winRateLocal - a.winRateLocal || scoreOf(b) - scoreOf(a))[0];
 // 得点上位D: 本命・対抗・▲・穴を除いた最高スコア
 const coreNums = new Set([hon.num, tai.num, san.num, ana.num]);
 const bestD = ranked.find((r) =>!coreNums.has(r.num)) || null;
 const maxMotor = Math.max(...racers.map((r) => r.motorRate));
 let anaReason;
+if (anaRule === 'score4') {
 if (ana.motorRate >= maxMotor) anaReason = `モーター2連率${ana.motorRate}%は全艇トップの好モーター`;
+else anaReason = `スコア4位の一発候補・モーター2連率${ana.motorRate}%`;
+}
+else if (ana.motorRate >= maxMotor) anaReason = `モーター2連率${ana.motorRate}%は全艇トップの好モーター`;
 else if (ana.class === 'A1' || ana.class === 'A2') anaReason = `${ana.class}級の実力派・モーター2連率${ana.motorRate}%`;
 else anaReason = `モーター2連率${ana.motorRate}%で下位スコアからの一発候補`;
 
@@ -146,11 +157,12 @@ comment,
 };
 }
 
-// 朝の事前予想 (従来の buildPrediction と同一)
+// 朝の事前予想。穴は C3-lite (スコア4位) で構築する (2026-11-25 採用、
+// 2026-11-26 朝生成から)。展示反映 (rebuildWithTenji) はモーター穴のまま。
 export function buildPrediction(racers) {
 if (!racers || racers.length < 4) return null;
 scoreRacers(racers);
-return buildPredictionWithScores(racers, (r) => r.score);
+return buildPredictionWithScores(racers, (r) => r.score, 'score4');
 }
 
 // 展示タイムの合成スコア表 (艇番 -> 合成スコア・丸めなし) を返す。
